@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="theme-color" content="#0f1115" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <title>FitMacro — Тренировки и КБЖУ</title>
+  <link rel="manifest" href="manifest.json" />
+  <link rel="icon" href="icon.svg" type="image/svg+xml" />
+  <link rel="apple-touch-icon" href="icon.svg" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+<div class="app-container">
+  <header class="top-bar">
+    <div><h1>FitMacro</h1><span class="subtitle"><span id="current-date"></span> · <span id="level-badge"></span></span></div>
+    <div class="top-actions">
+      <span class="streak" title="Дней подряд с тренировкой">🔥 <b id="streak-count">0</b></span>
+      <button class="timer-badge" id="open-timer-btn" aria-label="Таймер отдыха">⏱ <span id="mini-timer">01:30</span></button>
+    </div>
+  </header>
+
+  <section class="hero">
+    <div class="ring-wrap">
+      <svg class="ring" viewBox="0 0 120 120" aria-hidden="true">
+        <defs><linearGradient id="rg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#d9f99d"/><stop offset="1" stop-color="#22d3ee"/></linearGradient></defs>
+        <circle class="ring-bg" cx="60" cy="60" r="52"/><circle class="ring-arc" id="ring-arc" cx="60" cy="60" r="52"/>
+      </svg>
+      <div class="ring-center">
+        <span class="label">сожжено</span>
+        <div class="big-number" id="total-burned">0</div>
+        <span class="label">ккал из <span id="burn-goal">500</span></span>
+      </div>
+    </div>
+    <div class="water-box">
+      <div class="glass"><div class="liquid empty" id="water-bar"></div><span class="glass-txt"><b id="water-current">0</b><small>мл</small></span></div>
+      <span class="label">цель <span id="water-goal">0</span></span>
+      <div class="water-btns">
+        <button class="btn-water" id="sub-water-btn" aria-label="Убрать 250 мл">−</button>
+        <button class="btn-water" id="add-water-btn">+250</button>
+      </div>
+    </div>
+  </section>
+  <p class="fun-line" id="fun-line" title="Нажмите, чтобы сменить"></p>
+  <div class="target">Съесть сегодня <strong><span id="target-kcal">0</span> ккал</strong></div>
+  <div class="macros-grid">
+    <div class="macro-pill protein"><span>Белки</span><strong id="total-p">0 г</strong></div>
+    <div class="macro-pill fat"><span>Жиры</span><strong id="total-f">0 г</strong></div>
+    <div class="macro-pill carb"><span>Углеводы</span><strong id="total-c">0 г</strong></div>
+  </div>
+  <div id="toast" class="toast"></div><div id="confetti"></div>
+
+  <main id="tab-workout" class="tab-content active">
+    <div class="section-header">
+      <h2>Тренировка сегодня</h2>
+      <button class="btn-text danger" id="clear-workout-btn">Очистить</button>
+    </div>
+    <div id="workout-list" class="card-list"></div>
+  </main>
+
+  <main id="tab-exercises" class="tab-content">
+    <div class="section-header">
+      <h2>Упражнения</h2>
+      <button class="btn-small" id="toggle-custom-form-btn">+ Своё</button>
+    </div>
+    <form id="custom-exercise-form" class="custom-form hidden">
+      <input type="text" id="custom-name" placeholder="Название (напр. Отжимания на брусьях)" maxlength="60" required />
+      <div class="row">
+        <select id="custom-type">
+          <option value="strength">Силовое (подходы)</option>
+          <option value="cardio">Кардио (минуты)</option>
+        </select>
+        <input type="number" id="custom-met" step="0.5" min="2" max="18" value="6.5" title="Интенсивность (MET)" required />
+      </div>
+      <button type="submit" class="btn-primary">Сохранить в базу</button>
+    </form>
+    <input type="search" id="search" class="search" placeholder="Поиск упражнения или мышцы" />
+    <div class="chips" id="category-chips">
+      <button class="chip active" data-cat="all">Все</button>
+      <button class="chip" data-cat="strength">Силовые</button>
+      <button class="chip" data-cat="cardio">Кардио</button>
+      <button class="chip" data-cat="core">Кор / Свой вес</button>
+      <button class="chip" data-cat="custom">Мои</button>
+    </div>
+    <div id="exercise-catalog" class="card-list"></div>
+  </main>
+
+  <main id="tab-food" class="tab-content">
+    <h2>Питание</h2>
+    <div class="profile-card">
+      <div class="norm-line"><span>Съедено</span><strong><span id="eaten-kcal">0</span> / <span id="eaten-target">0</span> ккал</strong></div>
+      <div class="bar"><i id="eaten-bar"></i></div>
+      <p class="subtitle" id="eaten-left"></p>
+      <p class="norm-line">Белки <strong id="eaten-p">0</strong></p>
+      <p class="norm-line">Жиры <strong id="eaten-f">0</strong></p>
+      <p class="norm-line">Углеводы <strong id="eaten-c">0</strong></p>
+    </div>
+    <div class="profile-card">
+      <select id="food-select" aria-label="Продукт"></select>
+      <div class="row">
+        <input type="number" id="food-grams" inputmode="numeric" min="1" max="2000" value="100" aria-label="Граммы" />
+        <button class="btn-primary" id="add-food-btn">+ Съел(а)</button>
+      </div>
+    </div>
+    <div id="food-list" class="card-list"></div>
+  </main>
+
+  <main id="tab-history" class="tab-content">
+    <h2>История</h2>
+    <div class="profile-card">
+      <h3>Сожжено за 7 дней</h3>
+      <div class="chart" id="week-chart"></div>
+      <p class="norm-line">Всего за неделю: <strong id="week-kcal">0 ккал</strong></p>
+      <p class="norm-line">Тренировочных дней: <strong id="week-days">0 из 7</strong></p>
+    </div>
+  </main>
+
+  <main id="tab-profile" class="tab-content">
+    <h2>Параметры и цель</h2>
+    <div class="profile-card">
+      <div class="row">
+        <label><span>Вес, кг</span><input type="number" id="user-weight" min="35" max="250" /></label>
+        <label><span>Рост, см</span><input type="number" id="user-height" min="120" max="230" /></label>
+      </div>
+      <div class="row">
+        <label><span>Возраст</span><input type="number" id="user-age" min="12" max="90" /></label>
+        <label><span>Пол</span>
+          <select id="user-sex"><option value="m">Мужской</option><option value="f">Женский</option></select>
+        </label>
+      </div>
+      <label><span>Активность вне тренировок</span>
+        <select id="user-act">
+          <option value="1.2">Сидячая (офис)</option>
+          <option value="1.375">Лёгкая (прогулки)</option>
+          <option value="1.55">Высокая (на ногах весь день)</option>
+        </select>
+      </label>
+      <label><span>Цель</span>
+        <select id="user-goal">
+          <option value="bulk">Набор массы (+15% ккал)</option>
+          <option value="maintain">Поддержание формы</option>
+          <option value="cut">Сушка (−15% ккал)</option>
+        </select>
+      </label>
+      <button class="btn-primary" id="save-profile-btn">Сохранить и пересчитать</button>
+    </div>
+    <div class="profile-card">
+      <h3>Дневная норма с учётом тренировки</h3>
+      <p class="norm-line">Калории <strong id="daily-kcal">0</strong></p>
+      <p class="norm-line">Белки <strong id="daily-p">0</strong></p>
+      <p class="norm-line">Жиры <strong id="daily-f">0</strong></p>
+      <p class="norm-line">Углеводы <strong id="daily-c">0</strong></p>
+      <p class="subtitle">Базовый обмен — по формуле Миффлина — Сан-Жеора.</p>
+    </div>
+  </main>
+
+  <div id="timer-modal" class="modal hidden">
+    <div class="modal-content">
+      <h3>Таймер отдыха</h3>
+      <div class="timer-display" id="timer-display">01:30</div>
+      <div class="timer-presets">
+        <button data-sec="45">45с</button><button data-sec="90">1:30</button>
+        <button data-sec="120">2:00</button><button data-sec="180">3:00</button>
+      </div>
+      <div class="timer-controls">
+        <button class="btn-primary" id="timer-start-btn">Старт</button>
+        <button class="btn-secondary" id="timer-add-btn">+15с</button>
+        <button class="btn-secondary" id="timer-reset-btn">Сброс</button>
+      </div>
+      <button class="btn-text" id="close-timer-btn">Закрыть</button>
+    </div>
+  </div>
+
+  <nav class="bottom-nav">
+    <button class="nav-btn active" data-target="tab-workout"><span>🏋️</span><small>Тренировка</small></button>
+    <button class="nav-btn" data-target="tab-exercises"><span>📋</span><small>Упражнения</small></button>
+    <button class="nav-btn" data-target="tab-food"><span>🍽️</span><small>Еда</small></button>
+    <button class="nav-btn" data-target="tab-history"><span>📈</span><small>История</small></button>
+    <button class="nav-btn" data-target="tab-profile"><span>⚙️</span><small>Профиль</small></button>
+  </nav>
+</div>
+<script>
+window.addEventListener('error', function (e) {
+  var msg = e.error && e.error.stack ? e.error.stack.split('\n').slice(0, 2).join(' ') : e.message;
+  if (/^Script error/.test(e.message)) msg += ' — браузер скрыл детали. Откройте файлы через сервер или обновите браузер.';
+  var b = document.createElement('div');
+  b.style.cssText = 'position:fixed;left:8px;right:8px;bottom:96px;z-index:999;background:#7f1d1d;color:#fff;padding:10px;border-radius:12px;font:12px monospace';
+  b.textContent = 'Ошибка: ' + msg;
+  document.body.appendChild(b);
+});
+</script>
+<script src="data.js"></script>
+<script src="state.js"></script>
+<script src="calc.js"></script>
+<script src="ui.js"></script>
+<script src="food.js"></script>
+<script src="fun.js"></script>
+<script src="timer.js"></script>
+<script src="main.js"></script>
+</body>
+</html>
